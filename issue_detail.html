@@ -1,0 +1,311 @@
+<!-- body -->  
+<div id="main-content" class="container">
+    <div  ng-include="'sidebar_left.html'">
+</div>
+
+<!-- main container -->
+<div class="col-lg-6 main-container marginbottom">
+
+    <div class="panel panel-default main-panel margintop {{hide}}" ng-repeat="newProblem in problemIdList |filter : {id : id()}" >
+        <a href="{{lastUrl}}" class="close" aria-label="close" >&times;</a>
+         
+         <div class="errorMessage">
+             <div class="alert alert-danger {{successClass}}" ng-hide="hideError" >
+                                      <a class="close " aria-label="close" ng-click="closeError()" ng-hide="hideError" >&times;</a>
+                                      <p>{{errorVote}}</p>
+                                      <p>{{successMessage}}</p>
+                                      <p>{{successMessageNonApi}}</p>
+                                      <p>{{errorConfirmed}}</p>
+             </div>    
+
+         </div>
+
+        <h1 class="fontM">{{newProblem.title}}<br><small>{{newProblem.location.full_address}}</small></h1>
+        <div class="thumbnail right-caption span4">
+            <img class="img-responsive" src="{{ noProtocol(newProblem.image.image_url) }}" alt="Plaatje van de situatie" ng-if="newProblem.image">
+            <img class="img-responsive" src="{{sateliteimg}}" alt="Plaatje van de situatie" ng-if="!newProblem.image">
+            <div class="detail-table hidden-xs fontM">
+                <table width="100%">
+                    <tbody> 
+                        <tr>
+                            <td/><td/>
+                            <td colspan="2" align="right" style='padding:0px 30px 0px 0px'>Delen met:</td>  
+                        </tr>
+                        <tr>
+                            <td>Door:</td>
+                            <td>{{newProblem.owner.username}}</td>
+                            <td rowspan="3" colspan="2" align="right"> 
+                                <img ng-click="sharetwitter()" class="img-rounded" alt="Twitter" width="49" height="49" src="./img/twitter_s.png">
+                                <img ng-click="sharefacebook()" class="img-rounded" alt="Facebook" width="49" height="49" src="./img/facebook_s.png">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Datum:</td>
+                            <td>{{newProblem.created_at | datefilter}}</td>
+                        </tr>
+                        <tr ng-if="newProblem.type=='problem'">
+                            <td>Categorie:</td>
+                            <td>{{newProblem.category}}</td>
+                        </tr>
+                        <tr>
+                            <td>Status:</td>
+                            <td>{{newProblem.status_description}} <a class="{{hideLogStatus}}  issueLog" ng-click="logStatus()"> {{showDataText}} </a></td>
+                        </tr>
+                        <tr class="{{hideStatus}}">
+                            <td colspan="3">
+                                <ul class="status-log">
+                                    <li ng-repeat="issueLog in issueLogList" class="list-group-item status-log-item"><span class="text-muted"> {{issueLog.createdAt}}: </span>{{issueLog.message}}</li>
+                                </ul>
+                            </td>
+                        </tr> 
+                    </tbody>
+                </table>
+            </div>
+        </div>
+         <div class="issueDetailTable">
+            <table>
+                <tr>
+                    <td ng-show="newProblem.type=='problem'"><h2 class="fontM">Beschrijving</h2></td>
+                    <td ng-show="newProblem.type=='idea'"><h2 class="fontM">Idee</h2></td>
+                </tr>
+                <tr>
+                    <td class="issueDetailTableContent fontM"><p>{{newProblem.description}}</p></td>
+                </tr>
+                
+            </table>
+          </div>
+          <div class="issueDetaiTable fontM" ng-if="newProblem.type=='idea'">
+                <table>
+                    <tr>
+                        <td><h2 class="fontM">Realisatie</h2></td>
+                    </tr>
+                    <tr>
+                        <td class="issueDetailTableContent fontM"><p>{{newProblem.realization}}</p></td>
+                    </tr>
+                </table>
+          </div>
+        <button type="button" class="btn btn-primary mobilebtn" data-toggle="modal" data-target="{{stemModal}}" ng-click="sessionValid()">Reageer <span class="badge"id="mobilebtn">{{newProblem.comments}}</span></button>
+        
+            <button type="button" class="btn btn-primary mobilebtn" ng-click="voteSubmit()">
+                <span style="text-align:start">Stem </span><span class="badge" id="mobilebtn">{{newProblem.votes}}</span></button>
+
+        <div ng-hide="results==0 || commentList == null">
+            <h2 class="fontM">Reacties</h2>
+        <ul class="commentList" >
+            <li ng-repeat="comment in commentList | filter: x as results">
+                <div class="commentText">
+                    <p class="">{{comment.body}}</p> <span class="date sub-text"><strong>{{comment.username}}</strong> {{comment.created_at}}</span>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </div> 
+
+</div>
+<!--  sidebar right -->
+<div ng-include="'sidebar_my_issues.html'"></div>
+
+
+<!-- StemModal -->
+<div id="StemModal" class="modal fade" role="dialog" ng-controller="commentSubmitCtrl" ng-repeat="newProblem in newProblemList |filter : {id : id()}">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ng-click="close()">&times;</button>
+                <h1 class="modal-title fontM">Reactie plaatsen</h1>
+                <div class="alert alert-danger {{hide}}" >
+                                  <a class="close {{hide}}" aria-label="close" ng-click="close()" >&times;</a>
+                                  <p>{{errorBody}}</p>
+              </div>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" rows="5" id="comment" ng-model="comment"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal" ng-click="close()">Annuleren</button>
+                <button type="button" class="btn btn-success"ng-click="commentSubmit(newProblem.type)">Plaatsen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div id="CloseModal" class="modal fade" role="dialog" ng-controller="closeIssueCtrl">
+        <div class="modal-dialog">
+        <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" ng-click="close()">&times;</button>
+                    <h1 class="modal-title">Melding afsluiten</h1>
+                    <div class="alert alert-danger {{hideError}}" >
+                                  <a class="close {{hideError}}" aria-label="close" ng-click="close()" >&times;</a>
+                                  <p>{{errorClose}}</p>
+              </div>
+                </div>
+                <div class="modal-body">
+                    <span>Waardering:</span>
+                    <div class="ratingWarp">
+                        <span class="rating">
+                        <input type="radio" class="rating-input"
+                                id="rating-input-1-5" name="rating-input-1" ng-model="rating" value="5" ng-click="test()"/>
+                        <label for="rating-input-1-5" class="rating-star"></label>
+                        <input type="radio" class="rating-input"
+                                id="rating-input-1-4" name="rating-input-1" ng-model="rating" value="4" ng-click="test()"/>
+                        <label for="rating-input-1-4" class="rating-star"></label>
+                        <input type="radio" class="rating-input"
+                                id="rating-input-1-3" name="rating-input-1" ng-model="rating" value="3" ng-click="test()"/>
+                        <label for="rating-input-1-3" class="rating-star"></label>
+                        <input type="radio" class="rating-input"
+                                id="rating-input-1-2" name="rating-input-1" ng-model="rating" value="2" ng-click="test()"/>
+                        <label for="rating-input-1-2" class="rating-star"></label>
+                        <input type="radio" class="rating-input"
+                                id="rating-input-1-1" name="rating-input-1" ng-model="rating" value="1" ng-click="test()"/>
+                        <label for="rating-input-1-1" class="rating-star"></label>
+                    </span>
+                    </div>
+                    <span>Feedback:</span>
+                    <textarea class="form-control" rows="5" id="comment" ng-model="feedback"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" ng-click="close()" >Annuleren</button>
+                    <button type="button" class="btn btn-success" ng-click="closeIssueClick()">Afsluiten</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- resolveModal -->
+<div id="ResolveModal" class="modal fade" role="dialog" ng-controller="resolveIssueCommentYesCtrl">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ng-click="close()">&times;</button>
+                <h1 class="modal-title">Melding behandelen</h1>
+                <div class="alert alert-danger {{hide}}" >
+                                  <a class="close {{hide}}" aria-label="close" ng-click="close()" >&times;</a>
+                                  <p>{{error}}</p>
+              </div>
+            </div>
+            <div class="modal-body">
+                Behandelwijze:
+                <textarea class="form-control" rows="5" id="comment" ng-model="resolveComment"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                <button type="button" class="btn btn-success" ng-click="resolve()">Melding behandelen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- resolveModal Simple -->
+<div id="ResolveModalSimple" class="modal fade" role="dialog" ng-controller="resolveIssueCommentNoCtrl">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" ng-click="close()">&times;</button>
+                <h1 class="modal-title">Melding afwijzen</h1>
+                <div class="alert alert-danger {{hide}}" >
+                                  <a class="close {{hide}}" aria-label="close" ng-click="close()" >&times;</a>
+                                  <p>{{error}}</p>
+              </div>
+            </div>
+            <div class="modal-body">
+                reden van afwijzing:
+                <textarea class="form-control" rows="5" id="comment-2" ng-model="resolveComment"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                <button type="button" class="btn btn-success" ng-click="resolve()">Melding afwijzen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- deleteModal -->
+<div id="DeleteModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h1 class="modal-title">Melding verwijderen</h1>
+            </div>
+            <div class="modal-body">
+                Weet je zeker dat je deze melding wil verwijderen?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal" ng-click="deleteIssueWithHash()">Verwijderen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="selectVoteModal" class="modal fade" role="dialog" ng-controller="voteCtrl">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h1 class="modal-title">Stemmen</h1>
+                    <div class="alert alert-danger " ng-hide="hide" >
+                                  <a class="close " ng-hide="hide" aria-label="close" ng-click="close()" >&times;</a>
+                    </div>
+            </div>
+            <div class="modal-body" id="selectedBody">
+                <div class="selectedBody">
+                    <div class="selectedIcon">
+                        <div class="selectedText">Stem zelf</div>
+                    </div>
+                    <div class="selectedIcon">
+                        <div class="selectedText">Stem voor een ander</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- voteModal -->
+<div id="voteModal" class="modal fade" role="dialog" ng-controller="voteCtrl">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h1 class="modal-title">Stem indienen</h1>
+                    <div class="alert alert-danger " ng-hide="hide" >
+                                  <a class="close " ng-hide="hide" aria-label="close" ng-click="close()" >&times;</a>
+                                  <p>{{error}}</p>
+                    </div>
+            </div>
+            <div class="modal-body">
+                    <input type="text" class="form-control" id="email" placeholder="E-mailadres" ng-model="email" style="margin-bottom: 15px">
+                    <input type="text" class="form-control" id="initials" placeholder="voorletters" ng-model="name" style="margin-bottom: 15px" >
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-click="close()" data-dismiss="modal">Annuleren</button>
+                <button type="button" class="btn btn-success" ng-click="submit()">Verzenden</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Page specific js -->
+<!-- <script src="./js/vdb-start.js"></script> -->
+<script type='text/javascript'>
+    //placing the subnav fixed on top
+    $(document).ready(function() {
+        $('.subnav').affix({
+            offset: {
+                top: $('#navtop').height()
+            }
+        });	
+    });
+</script>
